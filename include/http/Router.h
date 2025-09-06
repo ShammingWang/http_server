@@ -5,7 +5,7 @@
 #include "http/HttpRequest.h"
 #include "http/HttpResponse.h"
 
-namespace http {
+namespace http { // 整个都在http命名空间下
 
 using Handler = std::function<void(const HttpRequest&, HttpResponse&)>;
 
@@ -25,7 +25,7 @@ class Router {
 public:
     void get(const std::string& path, Handler h) { add(Method::GET, path, std::move(h)); }
     void post(const std::string& path, Handler h) { add(Method::POST, path, std::move(h)); }
-    void add(Method m, const std::string& path, Handler h) {
+    void add(Method m, const std::string& path, Handler h) { //添加 路径+方法->处理函数 的映射
         routes_[RouteKey{m, path}] = std::move(h);
     }
     bool route(const HttpRequest& req, HttpResponse& resp) const;

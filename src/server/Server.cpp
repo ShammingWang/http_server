@@ -101,7 +101,7 @@ bool Server::handle_read(Connection& c) {
         // 其他错误
         sys_perror("recv");
         return false;
-    }
+    } // 将内核缓冲全读到inbuf中
 
     // 解析一次完整请求（按你现有的 Parser 语义：parse 成功即得到一个完整请求）
     if (c.parser.parse(c.inbuf)) {
@@ -112,9 +112,9 @@ bool Server::handle_read(Connection& c) {
         resp.set_keep_alive(c.keep_alive);
 
         bool routed = false;
-        if (router_) routed = router_->route(req, resp);
+        if (router_) routed = router_->route(req, resp); //找到路由并执行处理函数
 
-        if (!routed) {
+        if (!routed) { // 未命中路由，返回 404，也可能是服务器对象未设置路由
             resp.status = 404;
             resp.reason = "Not Found";
             resp.body   = "Not Found";
@@ -159,7 +159,7 @@ bool Server::handle_write(Connection& c) {
         //表示当前无法发送数据，需要稍后重试
         //这种情况通常发生在发送缓冲区已满时，应用程序需要等待缓冲区有空间后再尝试发送
         if (n > 0) {
-            c.outbuf.erase(0, static_cast<size_t>(n));
+            c.outbuf.erase(0, static_cast<size_t>(n)); // n是发送出去的长度
             continue;
         }
         const int err = last_sys_err();
