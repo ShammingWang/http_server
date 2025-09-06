@@ -151,7 +151,7 @@ std::string HttpResponse::to_string() const {
 
 bool Router::route(const HttpRequest& req, HttpResponse& resp) const {
     auto it = routes_.find(RouteKey{req.method, req.path});
-    if (it != routes_.end()) { it->second(req, resp); return true; }
+    if (it != routes_.end()) { it->second(req, resp); return true; } // 拿到这处理函数it->second并调用
     // static files
     if (!static_prefix_.empty() && !static_root_.empty()) {
         if (req.path.rfind(static_prefix_, 0) == 0) {
@@ -171,11 +171,24 @@ bool Router::route(const HttpRequest& req, HttpResponse& resp) const {
             fclose(f);
             resp.status = 200; resp.reason = "OK"; resp.body = std::move(data);
             // naive content-type by extension
-            if (full.rfind(".html")!=std::string::npos) resp.set_content_type("text/html; charset=utf-8");
-            else if (full.rfind(".json")!=std::string::npos) resp.set_content_type("application/json");
-            else if (full.rfind(".css")!=std::string::npos) resp.set_content_type("text/css");
-            else if (full.rfind(".js")!=std::string::npos) resp.set_content_type("application/javascript");
+            auto lower = [](std::string s){ for (auto& ch : s) ch = (char)std::tolower((unsigned char)ch); return s; };
+            std::string ext = lower(full);
+
+            if      (ext.rfind(".html") != std::string::npos) resp.set_content_type("text/html; charset=utf-8");
+            else if (ext.rfind(".json") != std::string::npos) resp.set_content_type("application/json");
+            else if (ext.rfind(".css")  != std::string::npos) resp.set_content_type("text/css");
+            else if (ext.rfind(".js")   != std::string::npos) resp.set_content_type("application/javascript");
+            else if (ext.rfind(".pdf")  != std::string::npos) {
+                resp.set_content_type("application/pdf");
+                resp.set_header("Content-Disposition", "inline"); // 确保内联预览而非下载
+            }
+            //（常见图片/字体）
+            else if (ext.rfind(".png")  != std::string::npos) resp.set_content_type("image/png");
+            else if (ext.rfind(".jpg")  != std::string::npos || ext.rfind(".jpeg") != std::string::npos) resp.set_content_type("image/jpeg");
+            else if (ext.rfind(".svg")  != std::string::npos) resp.set_content_type("image/svg+xml");
+            else if (ext.rfind(".woff2")!= std::string::npos) resp.set_content_type("font/woff2");
             else resp.set_content_type("application/octet-stream");
+
             return true;
         }
     }
