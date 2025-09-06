@@ -1,0 +1,14 @@
+# build artifacts
+build/
+*.obj
+*.pdb
+*.ilk
+*.exe
+*.dll
+*.lib
+*.out
+*.o
+*.a
+.vs/
+.vscode/
+
